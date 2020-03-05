@@ -49,10 +49,11 @@ steps:
     artifactName: 'artifact'
 
 - task: AzureRmWebAppDeployment@4
+  displayName: 'Deploy API web app'
   inputs:
     ConnectionType: 'AzureRM'
     azureSubscription: 'Azure'
     appType: 'webAppLinux'
     WebAppName: 'devops-devon'
-    packageForLinux: '$(Build.ArtifactStagingDirectory)/**/*.zip'
+    packageForLinux: '$(Build.ArtifactStagingDirectory)/**/api.zip'
     RuntimeStack: 'DOTNETCORE|3.0'
