@@ -57,3 +57,18 @@ steps:
     WebAppName: 'devops-devon'
     packageForLinux: '$(Build.ArtifactStagingDirectory)/**/api.zip'
     RuntimeStack: 'DOTNETCORE|3.0'
+
+- task: AzureRmWebAppDeployment@4
+  inputs:
+    ConnectionType: 'AzureRM'
+    azureSubscription: 'Azure'
+    appType: 'webApp'
+    WebAppName: 'devops-win'
+    VirtualApplication: '/'
+    packageForLinux: '$(Build.ArtifactStagingDirectory)/**/api.zip'
+    enableCustomDeployment: true
+    DeploymentType: 'webDeploy'
+    TakeAppOfflineFlag: false
+    ExcludeFilesFromAppDataFlag: false
+    AdditionalArguments: 
+    RenameFilesFlag: false
