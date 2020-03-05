@@ -44,16 +44,14 @@ steps:
   displayName: Publish Windows Artifact
   inputs:
     command: publish
-    publishWebProjects: True
-    arguments: '**\api.csproj --configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)/Windows'
+    arguments: '**\*.sln --configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)/Windows'
     zipAfterPublish: True
 
 - task: DotNetCoreCLI@2
   displayName: Publish Linux Artifact
   inputs:
     command: publish
-    publishWebProjects: True
-    arguments: '**\api.csproj --configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)/Linux -r linux-x64'
+    arguments: '**\*.sln --configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)/Linux -r linux-x64'
     zipAfterPublish: True
 
 # this code takes all the files in $(Build.ArtifactStagingDirectory) and uploads them as an artifact of your build.
