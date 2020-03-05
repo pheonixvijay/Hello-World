@@ -47,3 +47,12 @@ steps:
   inputs:
     pathtoPublish: '$(Build.ArtifactStagingDirectory)' 
     artifactName: 'artifact'
+
+- task: AzureRmWebAppDeployment@4
+  inputs:
+    ConnectionType: 'AzureRM'
+    azureSubscription: 'Azure'
+    appType: 'webAppLinux'
+    WebAppName: 'devops-devon'
+    packageForLinux: '$(Build.ArtifactStagingDirectory)/**/*.zip'
+    RuntimeStack: 'DOTNETCORE|3.0'
