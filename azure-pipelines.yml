@@ -34,11 +34,19 @@ steps:
     configuration: '$(buildConfiguration)'
 
 - task: DotNetCoreCLI@2
-  displayName: Publish
+  displayName: Publish Windows Artifact
   inputs:
     command: publish
     publishWebProjects: True
-    arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+    arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)/Windows'
+    zipAfterPublish: True
+
+- task: DotNetCoreCLI@2
+  displayName: Publish Linux Artifact
+  inputs:
+    command: publish
+    publishWebProjects: True
+    arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)/Linux -r linux-x64'
     zipAfterPublish: True
 
 # this code takes all the files in $(Build.ArtifactStagingDirectory) and uploads them as an artifact of your build.
@@ -55,7 +63,7 @@ steps:
     azureSubscription: 'Azure'
     appType: 'webAppLinux'
     WebAppName: 'devops-devon'
-    packageForLinux: '$(Build.ArtifactStagingDirectory)/**/api.zip'
+    packageForLinux: '$(Build.ArtifactStagingDirectory)/Linux/api.zip'
     RuntimeStack: 'DOTNETCORE|3.0'
 
 - task: AzureRmWebAppDeployment@4
@@ -65,7 +73,7 @@ steps:
     appType: 'webApp'
     WebAppName: 'devops-win'
     VirtualApplication: '/'
-    packageForLinux: '$(Build.ArtifactStagingDirectory)/**/api.zip'
+    packageForLinux: '$(Build.ArtifactStagingDirectory)/Windows/api.zip'
     enableCustomDeployment: true
     DeploymentType: 'webDeploy'
     TakeAppOfflineFlag: false
