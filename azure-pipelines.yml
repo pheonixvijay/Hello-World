@@ -1,0 +1,103 @@
+# ASP.NET Core (.NET Framework)
+# Build and test ASP.NET Core projects targeting the full .NET Framework.
+# Add steps that publish symbols, save build artifacts, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+
+trigger:
+- master
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+
+steps:
+- task: NuGetToolInstaller@1
+
+- task: NuGetCommand@2
+  inputs:
+    restoreSolution: '$(solution)'
+
+- task: SonarQubePrepare@4
+  displayName: "Prepare Sonar Analysis"
+  inputs:
+    SonarQube: 'SonarQube'
+    scannerMode: 'MSBuild'
+    projectKey: 'hello-world'
+    projectName: 'hello-world'
+    projectVersion: '$(Build.BuildNumber)'
+    extraProperties: |
+      # Additional properties that will be passed to the scanner, 
+      # Put one key=value per line, example:
+      sonar.exclusions=**/*.bin
+
+- task: DotNetCoreCLI@2
+  displayName: 'Build using dot net core cli'
+  inputs:
+      command: build
+      arguments: '--configuration $(buildConfiguration)'
+      projects: '**/*.sln'
+
+- task: VSTest@2
+  inputs:
+    platform: '$(buildPlatform)'
+    configuration: '$(buildConfiguration)'
+
+- task: SonarQubeAnalyze@4
+  displayName: "Run Analysis"
+
+- task: SonarQubePublish@4
+  inputs:
+    pollingTimeoutSec: '300'
+
+- task: DotNetCoreCLI@2
+  displayName: Publish Windows Artifact
+  inputs:
+    command: 'publish'
+    publishWebProjects: false
+    projects: '**/*.csproj'
+    arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)/Windows'
+
+
+- task: DotNetCoreCLI@2
+  displayName: Publish Linux Artifact
+  inputs:
+    command: 'publish'
+    publishWebProjects: false
+    projects: '**/*.csproj'
+    arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)/Linux -r linux-x64'
+
+# this code takes all the files in $(Build.ArtifactStagingDirectory) and uploads them as an artifact of your build.
+- task: PublishBuildArtifacts@1
+  displayName: Artifact Creation
+  inputs:
+    pathtoPublish: '$(Build.ArtifactStagingDirectory)' 
+    artifactName: 'artifact'
+
+- task: AzureRmWebAppDeployment@4
+  displayName: 'Deploy API web app'
+  inputs:
+    ConnectionType: 'AzureRM'
+    azureSubscription: 'Azure'
+    appType: 'webAppLinux'
+    WebAppName: 'devops-devon'
+    packageForLinux: '$(Build.ArtifactStagingDirectory)/Linux/api.zip'
+    RuntimeStack: 'DOTNETCORE|3.0'
+
+- task: AzureRmWebAppDeployment@4
+  inputs:
+    ConnectionType: 'AzureRM'
+    azureSubscription: 'Azure'
+    appType: 'webApp'
+    WebAppName: 'devops-win'
+    VirtualApplication: '/'
+    packageForLinux: '$(Build.ArtifactStagingDirectory)/Windows/api.zip'
+    enableCustomDeployment: true
+    DeploymentType: 'webDeploy'
+    TakeAppOfflineFlag: false
+    ExcludeFilesFromAppDataFlag: false
+    AdditionalArguments: 
+    RenameFilesFlag: false
