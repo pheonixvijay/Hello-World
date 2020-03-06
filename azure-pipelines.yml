@@ -41,10 +41,12 @@ steps:
       arguments: '--configuration $(buildConfiguration)'
       projects: '**/*.sln'
 
-- task: VSTest@2
+- task: DotNetCoreCLI@2
+  displayName: 'Running Unit test cases'
   inputs:
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+      command: test
+      projects: '**/*tests.csproj'
+      arguments: '--no-restore --no-build --configuration $(buildConfiguration) --logger trx --collect:"Code Coverage"'
 
 - task: SonarQubeAnalyze@4
   displayName: "Run Analysis"
