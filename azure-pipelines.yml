@@ -32,7 +32,7 @@ steps:
     extraProperties: |
       # Additional properties that will be passed to the scanner, 
       # Put one key=value per line, example:
-      sonar.exclusions=**/*.bin
+      sonar.exclusions=**/*.bin,**/*.js
 
 - task: DotNetCoreCLI@2
   displayName: 'Build using dot net core cli'
