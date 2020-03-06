@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace api
 {
+    [ExcludeFromCodeCoverage]
     public class Program
     {
         public static void Main(string[] args)
