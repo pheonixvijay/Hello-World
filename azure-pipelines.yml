@@ -61,6 +61,7 @@ steps:
     repository: 'acr-api'
     command: 'buildAndPush'
     Dockerfile: '**/DockerFile'
+    tags: '$(Build.BuildNumber)'
 
 - task: DotNetCoreCLI@2
   displayName: Publish Windows Artifact
