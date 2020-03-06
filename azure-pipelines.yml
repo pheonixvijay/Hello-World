@@ -101,5 +101,5 @@ steps:
     DeploymentType: 'webDeploy'
     TakeAppOfflineFlag: false
     ExcludeFilesFromAppDataFlag: false
-    AdditionalArguments: 
+    AdditionalArguments: '-useChecksum'
     RenameFilesFlag: false
