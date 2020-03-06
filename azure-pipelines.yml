@@ -55,6 +55,13 @@ steps:
   inputs:
     pollingTimeoutSec: '300'
 
+- task: Docker@2
+  inputs:
+    containerRegistry: 'Azure Container Registery'
+    repository: 'acr-api'
+    command: 'buildAndPush'
+    Dockerfile: '**/Dockerfile'
+
 - task: DotNetCoreCLI@2
   displayName: Publish Windows Artifact
   inputs:
