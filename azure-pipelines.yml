@@ -21,24 +21,36 @@ steps:
   inputs:
     restoreSolution: '$(solution)'
 
-- task: DotNetCoreCLI@2
-  displayName: 'api -Build using dot net core cli'
+- task: SonarQubePrepare@4
+  displayName: "Prepare Sonar Analysis"
   inputs:
-      command: build
-      arguments: '--configuration $(buildConfiguration)'
-      projects: '**/api.csproj'
+    SonarQube: 'SonarQube'
+    scannerMode: 'MSBuild'
+    projectKey: 'hello-world'
+    projectName: 'hello-worl'
+    extraProperties: |
+      # Additional properties that will be passed to the scanner, 
+      # Put one key=value per line, example:
+      sonar.exclusions=**/*.bin
 
 - task: DotNetCoreCLI@2
-  displayName: 'web - Build using dot net core cli'
+  displayName: 'Build using dot net core cli'
   inputs:
       command: build
       arguments: '--configuration $(buildConfiguration)'
-      projects: '**/web.csproj'
+      projects: '**/*.sln'
 
 - task: VSTest@2
   inputs:
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
+
+- task: SonarQubeAnalyze@4
+  displayName: "Run Analysis"
+
+- task: SonarQubePublish@4
+  inputs:
+    pollingTimeoutSec: '300'
 
 - task: DotNetCoreCLI@2
   displayName: Publish Windows Artifact
