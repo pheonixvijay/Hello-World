@@ -27,7 +27,8 @@ steps:
     SonarQube: 'SonarQube'
     scannerMode: 'MSBuild'
     projectKey: 'hello-world'
-    projectName: 'hello-worl'
+    projectName: 'hello-world'
+    projectVersion: '$(Build.BuildNumber)'
     extraProperties: |
       # Additional properties that will be passed to the scanner, 
       # Put one key=value per line, example:
