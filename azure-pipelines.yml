@@ -13,102 +13,148 @@ variables:
   solution: '**/*.sln'
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
+  SonarQube.Project.Key: 'hello-world'
 
-steps:
-- task: NuGetToolInstaller@1
+stages:
+    - stage: Build
+      displayName: 'Build and Create Artifact'
+      jobs:
+        - job: 'Build_and_create_artifact'
+          continueOnError: false
+          steps:
+              - task: NuGetToolInstaller@1
+                
 
-- task: NuGetCommand@2
-  inputs:
-    restoreSolution: '$(solution)'
+              - task: NuGetCommand@2
+                displayName: 'Restore Nuget Packages'
+                inputs:
+                    restoreSolution: '$(solution)'
+              - task: SonarQubePrepare@4
+                displayName: 'Prepare Sonar Analysis'
+                inputs:
+                    SonarQube: 'SonarQube'
+                    scannerMode: MSBuild
+                    projectKey: '$(SonarQube.Project.Key)'
+                    projectName: '$(SonarQube.Project.Key)'
+                    projectVersion: '$(Build.BuildNumber)'
+                    extraProperties: |
+                        sonar.exclusions=**/*.bin,**/*.js
+              - task: DotNetCoreCLI@2
+                displayName: 'Build the solution'
+                inputs:
+                    command: build
+                    arguments: '--configuration $(buildConfiguration)'
+                    projects: '$(solution)'
+              - task: DotNetCoreCLI@2
+                displayName: 'Run Unit Test case and collect code coverage'
+                inputs:
+                    command: test
+                    arguments: '--no-restore --no-build --configuration $(buildConfiguration) --logger trx --collect:"Code Coverage"'
+                    projects: '**/*tests.csproj'
+              - task: SonarQubeAnalyze@4
+                displayName: 'Run Sonar Analysis'
 
-- task: SonarQubePrepare@4
-  displayName: "Prepare Sonar Analysis"
-  inputs:
-    SonarQube: 'SonarQube'
-    scannerMode: 'MSBuild'
-    projectKey: 'hello-world'
-    projectName: 'hello-world'
-    projectVersion: '$(Build.BuildNumber)'
-    extraProperties: |
-      # Additional properties that will be passed to the scanner, 
-      # Put one key=value per line, example:
-      sonar.exclusions=**/*.bin,**/*.js
+              - task: SonarQubePublish@4
+                displayName: 'Publish result to Sonar'
+                timeoutInMinutes: 300
 
-- task: DotNetCoreCLI@2
-  displayName: 'Build using dot net core cli'
-  inputs:
-      command: build
-      arguments: '--configuration $(buildConfiguration)'
-      projects: '**/*.sln'
+              - task: DotNetCoreCLI@2
+                displayName: 'Package Linux Artifacts'
+                inputs:
+                    command: publish
+                    arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)/Linux -r linux-x64'
+                    projects: '**/*.csproj'
+                    publishWebProjects: false
 
-- task: DotNetCoreCLI@2
-  displayName: 'Running Unit test cases'
-  inputs:
-      command: test
-      projects: '**/*tests.csproj'
-      arguments: '--no-restore --no-build --configuration $(buildConfiguration) --logger trx --collect:"Code Coverage"'
+              - task: DotNetCoreCLI@2
+                displayName: 'Package Windows Artifacts'
+                inputs:
+                    command: publish
+                    arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)/Windows'
+                    projects: '**/*.csproj'
+                    publishWebProjects: false
+                
+              - task: PublishBuildArtifacts@1
+                displayName: 'Upload artifact to AzureDevOps'
+                inputs:
+                    ArtifactName: 'artifact'
+                    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
 
-- task: SonarQubeAnalyze@4
-  displayName: "Run Analysis"
+    - stage: Deploy to Azure
+      displayName: Deploy to Azure
+      jobs:
+          - deployment: Deploy_to_Azure
+            continueOnError: false
+            environment: 'Development'
+            variables:
+                LinuxWebAppName: 'Linux-WebApp'
+                WindowsWebAppName: 'Windows-WebApp'
+                LinuxResourceGroup: 'Linux'
+                WindowsResourceGroup: 'Windows'
+                AzureSubscription: 'Azure'
+            strategy:
+             runOnce:
+                 preDeploy:
+                  steps:
+                  - task: AzurePowerShell@5
+                    displayName: 'Create the Windows resources'
+                    inputs:
+                      azureSubscription: 'Azure'
+                      ScriptType: 'InlineScript'
+                      Inline: |
+                        New-AzResourceGroup -Name $(WindowsResourceGroup) -Location eastus
+                        
+                        $AppServicePlan = New-AzAppServicePlan -Name Windows -Location eastus -Tier Basic -NumberofWorkers 1 -WorkerSize Small -ResourceGroupName $(WindowsResourceGroup)
+                        
+                        New-AzWebApp -ResourceGroupName $(WindowsResourceGroup) -Name $(WindowsWebAppName) -Location eastus -AppServicePlan $AppServicePlan.Name
+                      azurePowerShellVersion: 'LatestVersion'
+                  - task: AzurePowerShell@5
+                    displayName: 'Create Linux Resources'
+                    inputs:
+                      azureSubscription: 'Azure'
+                      ScriptType: 'InlineScript'
+                      Inline: |
+                        New-AzResourceGroup -Name $(LinuxResourceGroup) -Location eastus
+                        
+                        $AppServicePlan = New-AzAppServicePlan -Name Windows -Location eastus -Tier Basic -NumberofWorkers 1 -WorkerSize Small -ResourceGroupName $(LinuxResourceGroup)
+                        
+                        New-AzWebApp -ResourceGroupName $(LinuxResourceGroup) -Name $(LinuxWebAppName) -Location eastus -AppServicePlan $AppServicePlan.Name
+                      azurePowerShellVersion: 'LatestVersion'
 
-- task: SonarQubePublish@4
-  inputs:
-    pollingTimeoutSec: '300'
+                 deploy:
+                     steps:
+                      - task: AzureRmWebAppDeployment@4
+                        displayName: 'Deploy Windows app'
+                        inputs:
+                          ConnectionType: 'AzureRM'
+                          azureSubscription: 'Azure'
+                          appType: 'webApp'
+                          WebAppName: 'WindowsWebAppName)'
+                          VirtualApplication: '/'
+                          packageForLinux: '$(Build.ArtifactStagingDirectory)/Windows/api.zip'
+                          enableCustomDeployment: true
+                          DeploymentType: 'webDeploy'
+                          ExcludeFilesFromAppDataFlag: false
+                          AdditionalArguments: 
+                          RenameFilesFlag: false
+                      - task: AzureRmWebAppDeployment@4
+                        displayName: 'Deploy Linux app'
+                        inputs:
+                          ConnectionType: 'AzureRM'
+                          azureSubscription: 'Azure'
+                          appType: 'webAppLinux'
+                          WebAppName: '$()'
+                          packageForLinux: '$(Build.ArtifactStagingDirectory)/Linux/api.zip'
+                          RuntimeStack: 'DOTNETCORE|3.0'
+                 on:
+                     success:
+                         steps:
+                             - script: echo Notify! This is on success
+                     failure:
+                         steps:
+                             - script: echo Restore from backup! This is on failure
+                    
+                          
 
-- task: Docker@2
-  inputs:
-    containerRegistry: 'Azure Container Registery'
-    repository: 'acr-api'
-    command: 'buildAndPush'
-    Dockerfile: '**/DockerFile'
-    tags: '$(Build.BuildNumber)'
-    arguments: 
 
-- task: DotNetCoreCLI@2
-  displayName: Publish Windows Artifact
-  inputs:
-    command: 'publish'
-    publishWebProjects: false
-    projects: '**/*.csproj'
-    arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)/Windows'
-
-
-- task: DotNetCoreCLI@2
-  displayName: Publish Linux Artifact
-  inputs:
-    command: 'publish'
-    publishWebProjects: false
-    projects: '**/*.csproj'
-    arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)/Linux -r linux-x64'
-
-# this code takes all the files in $(Build.ArtifactStagingDirectory) and uploads them as an artifact of your build.
-- task: PublishBuildArtifacts@1
-  displayName: Artifact Creation
-  inputs:
-    pathtoPublish: '$(Build.ArtifactStagingDirectory)' 
-    artifactName: 'artifact'
-
-- task: AzureRmWebAppDeployment@4
-  displayName: 'Deploy API web app'
-  inputs:
-    ConnectionType: 'AzureRM'
-    azureSubscription: 'Azure'
-    appType: 'webAppLinux'
-    WebAppName: 'devops-devon'
-    packageForLinux: '$(Build.ArtifactStagingDirectory)/Linux/api.zip'
-    RuntimeStack: 'DOTNETCORE|3.0'
-
-- task: AzureRmWebAppDeployment@4
-  inputs:
-    ConnectionType: 'AzureRM'
-    azureSubscription: 'Azure'
-    appType: 'webApp'
-    WebAppName: 'devops-win'
-    VirtualApplication: '/'
-    packageForLinux: '$(Build.ArtifactStagingDirectory)/Windows/api.zip'
-    enableCustomDeployment: true
-    DeploymentType: 'webDeploy'
-    TakeAppOfflineFlag: false
-    ExcludeFilesFromAppDataFlag: false
-    AdditionalArguments: '-useChecksum'
-    RenameFilesFlag: false
+                  
