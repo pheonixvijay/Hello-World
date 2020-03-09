@@ -102,11 +102,11 @@ stages:
                       azureSubscription: 'Azure'
                       ScriptType: 'InlineScript'
                       Inline: |
-                        New-AzResourceGroup -Name $(WindowsResourceGroup) -Location eastus
+                        New-AzResourceGroup -Name $(WindowsResourceGroup) -Location eastus -force
                         
-                        $AppServicePlan = New-AzAppServicePlan -Name Windows -Location eastus -Tier Basic -NumberofWorkers 1 -WorkerSize Small -ResourceGroupName $(WindowsResourceGroup)
+                        $AppServicePlan = New-AzAppServicePlan -Name Windows -Location eastus -Tier Basic -NumberofWorkers 1 -WorkerSize Small -ResourceGroupName $(WindowsResourceGroup) -force
                         
-                        New-AzWebApp -ResourceGroupName $(WindowsResourceGroup) -Name $(WindowsWebAppName) -Location eastus -AppServicePlan $AppServicePlan.Name
+                        New-AzWebApp -ResourceGroupName $(WindowsResourceGroup) -Name $(WindowsWebAppName) -Location eastus -AppServicePlan $AppServicePlan.Name -force
                       azurePowerShellVersion: 'LatestVersion'
                   - task: AzurePowerShell@5
                     displayName: 'Create Linux Resources'
@@ -114,11 +114,11 @@ stages:
                       azureSubscription: 'Azure'
                       ScriptType: 'InlineScript'
                       Inline: |
-                        New-AzResourceGroup -Name $(LinuxResourceGroup) -Location eastus
+                        New-AzResourceGroup -Name $(LinuxResourceGroup) -Location eastus -force
                         
                         $AppServicePlan = New-AzResource -ResourceGroupName $(LinuxResourceGroup) -Location eastus -ResourceType microsoft.web/serverfarms -ResourceName Linux -kind linux -Properties @{reserved="true"} -Sku @{name="B1";tier="Basic"; size="B1"; family="B"; capacity="1"} -Force -OutVariable AppServicePlan
                         
-                        New-AzWebApp -ResourceGroupName $(LinuxResourceGroup) -Name $(LinuxWebAppName) -Location eastus -AppServicePlan $AppServicePlan.Name
+                        New-AzWebApp -ResourceGroupName $(LinuxResourceGroup) -Name $(LinuxWebAppName) -Location eastus -AppServicePlan $AppServicePlan.Name -force
                       azurePowerShellVersion: 'LatestVersion'
 
                  deploy:
