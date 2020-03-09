@@ -137,7 +137,7 @@ stages:
                           appType: 'webApp'
                           WebAppName: '$(WindowsWebAppName)'
                           VirtualApplication: '/'
-                          packageForLinux: '$(System.DefaultWorkingDirectory)/artifact/Windows/api.zip'
+                          packageForLinux: '$(Agent.BuildDirectory)/artifact/Windows/api.zip'
                           enableCustomDeployment: true
                           DeploymentType: 'webDeploy'
                           ExcludeFilesFromAppDataFlag: false
@@ -149,7 +149,7 @@ stages:
                           azureSubscription: 'Azure'
                           appType: 'webAppLinux'
                           WebAppName: '$(LinuxWebAppName)'
-                          packageForLinux: '$(System.DefaultWorkingDirectory)/artifact/Linux/api.zip'
+                          packageForLinux: '$(Agent.BuildDirectory)/artifact/Linux/api.zip'
                           RuntimeStack: 'DOTNETCORE|3.0'
                  on:
                      success:
