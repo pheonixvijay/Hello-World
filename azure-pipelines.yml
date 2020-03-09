@@ -7,7 +7,7 @@ trigger:
 - master
 
 pool:
-  vmImage: 'windows-latest'
+  vmImage: 'ubuntu-latest'
 
 variables:
   solution: '**/*.sln'
@@ -62,13 +62,7 @@ steps:
     command: 'buildAndPush'
     Dockerfile: '**/DockerFile'
     tags: '$(Build.BuildNumber)'
-- task: Docker@2
-  inputs:
-    containerRegistry: 'Azure Container Registery'
-    repository: 'acr-api'
-    command: 'buildAndPush'
-    Dockerfile: '**/DockerFile'
-    tags: '$(Build.BuildNumber)'
+    arguments: 
 
 - task: DotNetCoreCLI@2
   displayName: Publish Windows Artifact
