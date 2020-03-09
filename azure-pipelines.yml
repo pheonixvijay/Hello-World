@@ -133,7 +133,7 @@ stages:
                         if($WebApp){Set-AzWebApp -ResourceGroupName $(LinuxResourceGroup) -Name $(LinuxWebAppName) -AppServicePlan $AppServicePlan.Name}
                         else{New-AzWebApp -ResourceGroupName $(LinuxResourceGroup) -Name $(LinuxWebAppName) -Location eastus -AppServicePlan $AppServicePlan.Name}
 
-                        if($WebApp){Set-AzWebApp -ResourceGroupName $(LinuxResourceGroup) -Name "$(LinuxWebAppName)-GUI" -AppServicePlan $AppServicePlan.Name}
+                        if($WebAppGui){Set-AzWebApp -ResourceGroupName $(LinuxResourceGroup) -Name "$(LinuxWebAppName)-GUI" -AppServicePlan $AppServicePlan.Name}
                         else{New-AzWebApp -ResourceGroupName $(LinuxResourceGroup) -Name "$(LinuxWebAppName)-GUI" -Location eastus -AppServicePlan $AppServicePlan.Name}
                       azurePowerShellVersion: 'LatestVersion'
 
