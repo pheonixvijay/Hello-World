@@ -107,9 +107,14 @@ stages:
                         $AppServicePlan = New-AzAppServicePlan -Name Windows -Location eastus -Tier Basic -NumberofWorkers 1 -WorkerSize Small -ResourceGroupName $(WindowsResourceGroup)
                         
                         $WebApp = Get-AzWebApp -ResourceGroupName $(WindowsResourceGroup) -Name $(WindowsWebAppName) -ErrorAction SilentlyContinue
+                        
+                        $WebAppGui = Get-AzWebApp -ResourceGroupName $(WindowsResourceGroup) -Name "$(WindowsWebAppName)-GUI" -ErrorAction SilentlyContinue
 
                         if($WebApp){Set-AzWebApp -ResourceGroupName $(WindowsResourceGroup) -Name $(WindowsWebAppName) -AppServicePlan $AppServicePlan.Name}
                         else{New-AzWebApp -ResourceGroupName $(WindowsResourceGroup) -Name $(WindowsWebAppName) -Location eastus -AppServicePlan $AppServicePlan.Name}
+
+                        if($WebAppGui){Set-AzWebApp -ResourceGroupName $(WindowsResourceGroup) -Name "$(WindowsWebAppName)-GUI" -AppServicePlan $AppServicePlan.Name}
+                        else{New-AzWebApp -ResourceGroupName $(WindowsResourceGroup) -Name "$(WindowsWebAppName)-GUI" -Location eastus -AppServicePlan $AppServicePlan.Name}
                       azurePowerShellVersion: 'LatestVersion'
                   - task: AzurePowerShell@5
                     displayName: 'Create Linux Resources'
@@ -123,8 +128,13 @@ stages:
                         
                         $WebApp = Get-AzWebApp -ResourceGroupName $(LinuxResourceGroup) -Name $(LinuxWebAppName) -ErrorAction SilentlyContinue
 
+                        $WebAppGui = Get-AzWebApp -ResourceGroupName $(LinuxResourceGroup) -Name "$(LinuxWebAppName)-GUI" -ErrorAction SilentlyContinue
+
                         if($WebApp){Set-AzWebApp -ResourceGroupName $(LinuxResourceGroup) -Name $(LinuxWebAppName) -AppServicePlan $AppServicePlan.Name}
                         else{New-AzWebApp -ResourceGroupName $(LinuxResourceGroup) -Name $(LinuxWebAppName) -Location eastus -AppServicePlan $AppServicePlan.Name}
+
+                        if($WebApp){Set-AzWebApp -ResourceGroupName $(LinuxResourceGroup) -Name "$(LinuxWebAppName)-GUI" -AppServicePlan $AppServicePlan.Name}
+                        else{New-AzWebApp -ResourceGroupName $(LinuxResourceGroup) -Name "$(LinuxWebAppName)-GUI" -Location eastus -AppServicePlan $AppServicePlan.Name}
                       azurePowerShellVersion: 'LatestVersion'
 
                  deploy:
@@ -132,7 +142,7 @@ stages:
                    vmImage: 'windows-latest'
                   steps:
                       - task: AzureRmWebAppDeployment@4
-                        displayName: 'Deploy Windows app'
+                        displayName: 'Deploy Windows API app'
                         inputs:
                           ConnectionType: 'AzureRM'
                           azureSubscription: 'Azure'
@@ -145,7 +155,20 @@ stages:
                           ExcludeFilesFromAppDataFlag: false
                           RenameFilesFlag: false
                       - task: AzureRmWebAppDeployment@4
-                        displayName: 'Deploy Linux app'
+                        displayName: 'Deploy Windows Web app'
+                        inputs:
+                          ConnectionType: 'AzureRM'
+                          azureSubscription: 'Azure'
+                          appType: 'webApp'
+                          WebAppName: '$(WindowsWebAppName)-GUI'
+                          VirtualApplication: '/'
+                          packageForLinux: '$(Agent.BuildDirectory)/artifact/Windows/web.zip'
+                          enableCustomDeployment: true
+                          DeploymentType: 'webDeploy'
+                          ExcludeFilesFromAppDataFlag: false
+                          RenameFilesFlag: false
+                      - task: AzureRmWebAppDeployment@4
+                        displayName: 'Deploy Linux API app'
                         inputs:
                           ConnectionType: 'AzureRM'
                           azureSubscription: 'Azure'
@@ -153,6 +176,15 @@ stages:
                           WebAppName: '$(LinuxWebAppName)'
                           packageForLinux: '$(Agent.BuildDirectory)/artifact/Linux/api.zip'
                           RuntimeStack: 'DOTNETCORE|3.0'
+                      - task: AzureRmWebAppDeployment@4
+                        displayName: 'Deploy Linux Web app'
+                        inputs:
+                          ConnectionType: 'AzureRM'
+                          azureSubscription: 'Azure'
+                          appType: 'webAppLinux'
+                          WebAppName: '$(LinuxWebAppName)'
+                          packageForLinux: '$(Agent.BuildDirectory)/artifact/Linux/web.zip'
+                          RuntimeStack: 'DOTNETCORE|3.0'                          
                  on:
                      success:
                          steps:
