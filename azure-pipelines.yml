@@ -83,7 +83,7 @@ stages:
     - stage: Deploy_to_Azure
       displayName: Deploy to Azure
       jobs:
-          - deployment: Deploy_to_Azure
+          - deployment: 
             continueOnError: false
             environment: 'Development'
             variables:
