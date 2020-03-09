@@ -128,7 +128,8 @@ stages:
                       azurePowerShellVersion: 'LatestVersion'
 
                  deploy:
-                     steps:
+                  pool: 'windows-latest'
+                  steps:
                       - task: AzureRmWebAppDeployment@4
                         displayName: 'Deploy Windows app'
                         inputs:
