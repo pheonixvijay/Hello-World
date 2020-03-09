@@ -129,13 +129,12 @@ stages:
                           ConnectionType: 'AzureRM'
                           azureSubscription: 'Azure'
                           appType: 'webApp'
-                          WebAppName: 'WindowsWebAppName)'
+                          WebAppName: '$(WindowsWebAppName)'
                           VirtualApplication: '/'
-                          packageForLinux: '$(Build.ArtifactStagingDirectory)/Windows/api.zip'
+                          packageForLinux: '$(System.DefaultWorkingDirectory)/artifact/Windows/api.zip'
                           enableCustomDeployment: true
                           DeploymentType: 'webDeploy'
                           ExcludeFilesFromAppDataFlag: false
-                          AdditionalArguments: 
                           RenameFilesFlag: false
                       - task: AzureRmWebAppDeployment@4
                         displayName: 'Deploy Linux app'
@@ -143,8 +142,8 @@ stages:
                           ConnectionType: 'AzureRM'
                           azureSubscription: 'Azure'
                           appType: 'webAppLinux'
-                          WebAppName: '$()'
-                          packageForLinux: '$(Build.ArtifactStagingDirectory)/Linux/api.zip'
+                          WebAppName: '$(LinuxWebAppName)'
+                          packageForLinux: '$(System.DefaultWorkingDirectory)/artifact/Linux/api.zip'
                           RuntimeStack: 'DOTNETCORE|3.0'
                  on:
                      success:
