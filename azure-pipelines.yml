@@ -87,8 +87,8 @@ stages:
             continueOnError: false
             environment: 'Development'
             variables:
-                LinuxWebAppName: 'Linux-WebApp'
-                WindowsWebAppName: 'Windows-WebApp'
+                LinuxWebAppName: 'DevOn-Linux-WebApp'
+                WindowsWebAppName: 'DevOn-Windows-WebApp'
                 LinuxResourceGroup: 'Linux'
                 WindowsResourceGroup: 'Windows'
                 AzureSubscription: 'Azure'
