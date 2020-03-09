@@ -80,7 +80,7 @@ stages:
                     ArtifactName: 'artifact'
                     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
 
-    - stage: Deploy to Azure
+    - stage: Deploy_to_Azure
       displayName: Deploy to Azure
       jobs:
           - deployment: Deploy_to_Azure
