@@ -17,7 +17,7 @@ variables:
 
 stages:
     - stage: Build
-      condition: eq($(DoBuild), 'true')
+      condition: eq(variables['DoBuild'], 'true')
       displayName: 'Build and Create Artifact'
       jobs:
         - job: 'Build_and_create_artifact'
@@ -81,7 +81,7 @@ stages:
                     ArtifactName: 'artifact'
                     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
     - stage: Docker
-      condition: eq($(DoDocker), 'true')
+      condition: eq(variables['DoDocker'], 'true')
       displayName: Docker
       jobs:
         - job: 
@@ -98,7 +98,7 @@ stages:
                 Dockerfile: '**/Dockerfile'
                 tags: '$(Build.BuildNumber)'
     - stage: Deploy
-      condition: eq($(DoAzure), 'true')
+      condition: eq(variables['DoAzure'], 'true')
       displayName: Deploy to Azure
       jobs:
           - deployment: 
