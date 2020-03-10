@@ -95,7 +95,7 @@ stages:
                 containerRegistry: 'Azure Container Registery'
                 repository: 'acr-api'
                 command: 'buildAndPush'
-                Dockerfile: '**/Dockerfile'
+                Dockerfile: '**/DockerFile'
                 tags: '$(Build.BuildNumber)'
     - stage: Deploy
       condition: eq(variables['DoAzure'], 'true')
