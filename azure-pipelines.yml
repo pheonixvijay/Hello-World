@@ -17,14 +17,15 @@ variables:
 
 stages:
     - stage: Build
+      condition: eq($(DoBuild), 'true')
       displayName: 'Build and Create Artifact'
       jobs:
         - job: 'Build_and_create_artifact'
+          pool:
+           vmImage: 'windows-latest'
           continueOnError: false
           steps:
               - task: NuGetToolInstaller@1
-                
-
               - task: NuGetCommand@2
                 displayName: 'Restore Nuget Packages'
                 inputs:
@@ -79,8 +80,25 @@ stages:
                 inputs:
                     ArtifactName: 'artifact'
                     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-
-    - stage: Deploy_to_Azure
+    - stage: Docker
+      condition: eq($(DoDocker), 'true')
+      displayName: Docker
+      jobs:
+        - job: 
+          displayName: Docker Job
+          pool:
+           vmImage: 'ubuntu-latest'
+          steps:
+           - task: Docker@2
+             displayName: 'Upload to ACR'
+             inputs:
+                containerRegistry: 'Azure Container Registery'
+                repository: 'acr-api'
+                command: 'buildAndPush'
+                Dockerfile: '**/Dockerfile'
+                tags: '$(Build.BuildNumber)'
+    - stage: Deploy
+      condition: eq($(DoAzure), 'true')
       displayName: Deploy to Azure
       jobs:
           - deployment: 
@@ -199,3 +217,14 @@ stages:
                                     Remove-AzResourceGroup -Name $(WindowsResourceGroup) -Force
                                     Remove-AzResourceGroup -Name $(LinuxResourceGroup) -Force
                                 azurePowerShellVersion: 'LatestVersion'
+          - deployment: 
+            displayName: Docker
+            pool:
+             vmImage: 'ubuntu-latest'
+            strategy: 
+             runOnce:
+               preDeploy:
+                 steps:
+                   - task: dock
+                     inputs:
+                       Dockerfile: '**'
