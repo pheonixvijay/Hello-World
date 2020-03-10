@@ -217,14 +217,3 @@ stages:
                                     Remove-AzResourceGroup -Name $(WindowsResourceGroup) -Force
                                     Remove-AzResourceGroup -Name $(LinuxResourceGroup) -Force
                                 azurePowerShellVersion: 'LatestVersion'
-          - deployment: 
-            displayName: Docker
-            pool:
-             vmImage: 'ubuntu-latest'
-            strategy: 
-             runOnce:
-               preDeploy:
-                 steps:
-                   - task: dock
-                     inputs:
-                       Dockerfile: '**'
