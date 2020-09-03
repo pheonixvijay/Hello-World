@@ -28,7 +28,7 @@ stages:
               - task: NuGetToolInstaller@1
 
               - checkout: git://DevOps/testing
-              - checkout: git://DevOps/testing/heads/feature/new-branch
+              - checkout: git://DevOps/testing@refs/heads/feature/new-branch
               - task: NuGetCommand@2
                 displayName: 'Restore Nuget Packages'
                 inputs:
