@@ -26,6 +26,9 @@ stages:
           continueOnError: false
           steps:
               - task: NuGetToolInstaller@1
+
+              - checkout: git://DevOps/testing
+              - checkout: git://DevOps/testing/heads/feature/new-branch
               - task: NuGetCommand@2
                 displayName: 'Restore Nuget Packages'
                 inputs:
