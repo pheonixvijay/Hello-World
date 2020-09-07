@@ -28,12 +28,16 @@ stages:
               - task: NuGetToolInstaller@1
 
               - checkout: git://DevOps/testing
-                path: pipelinescripts
                 clean: false
                 
-              - checkout: git://DevOps/testing@refs/heads/feature/new-branch
-                path: branch-location
-                clean: true
+              # - checkout: git://DevOps/testing@refs/heads/feature/new-branch
+              #   clean: true
+                
+              - task: PowerShell@2
+                displayName: 'Calling the script'
+                inputs:
+                  filePath: "$(Pipeline.Workspace)/s/testing/testing.ps1"
+              
               - task: NuGetCommand@2
                 displayName: 'Restore Nuget Packages'
                 inputs:
