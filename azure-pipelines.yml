@@ -36,7 +36,7 @@ stages:
               - task: PowerShell@2
                 displayName: 'Calling the script'
                 inputs:
-                  filePath: "$(Pipeline.Workspace)/s/testing/testing.ps1"
+                  filePath: "$(Pipeline.Workspace)/s/testing/ERP AL/testing.ps1"
               
               - task: NuGetCommand@2
                 displayName: 'Restore Nuget Packages'
