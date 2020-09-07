@@ -27,16 +27,16 @@ stages:
           steps:
               - task: NuGetToolInstaller@1
 
-              - checkout: git://DevOps/testing
+              - checkout: git://DevOps/testing@refs/heads/$(Branch)
                 clean: true
                 
-              - checkout: git://DevOps/testing2
-                clean: true
+              # - checkout: git://DevOps/testing2
+              #   clean: true
                 
               - task: PowerShell@2
                 displayName: 'Calling the script'
                 inputs:
-                  filePath: "$(Pipeline.Workspace)/s/testing/ERP AL/testing.ps1"
+                  filePath: "$(Pipeline.Workspace)/s/ERP AL/testing.ps1"
               
               - task: NuGetCommand@2
                 displayName: 'Restore Nuget Packages'
