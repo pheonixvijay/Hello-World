@@ -26,22 +26,12 @@ stages:
           continueOnError: false
           steps:
               - task: NuGetToolInstaller@1
-
-              - checkout: git://DevOps/testing@refs/heads/$(Branch)
-                clean: true
-                
-              # - checkout: git://DevOps/testing2
-              #   clean: true
-                
-              - task: PowerShell@2
-                displayName: 'Calling the script'
-                inputs:
-                  filePath: "$(Pipeline.Workspace)/s/ERP AL/testing.ps1"
               
               - task: NuGetCommand@2
                 displayName: 'Restore Nuget Packages'
                 inputs:
                     restoreSolution: '$(solution)'
+
               - task: SonarQubePrepare@4
                 displayName: 'Prepare Sonar Analysis'
                 inputs:
@@ -52,18 +42,21 @@ stages:
                     projectVersion: '$(Build.BuildNumber)'
                     extraProperties: |
                         sonar.exclusions=**/*.bin,**/*.js
+
               - task: DotNetCoreCLI@2
                 displayName: 'Build the solution'
                 inputs:
                     command: build
                     arguments: '--configuration $(buildConfiguration)'
                     projects: '$(solution)'
+
               - task: DotNetCoreCLI@2
                 displayName: 'Run Unit Test case and collect code coverage'
                 inputs:
                     command: test
                     arguments: '--no-restore --no-build --configuration $(buildConfiguration) --logger trx --collect:"Code Coverage"'
                     projects: '**/*tests.csproj'
+
               - task: SonarQubeAnalyze@4
                 displayName: 'Run Sonar Analysis'
 
@@ -92,6 +85,7 @@ stages:
                 inputs:
                     ArtifactName: 'artifact'
                     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+                    
     - stage: Docker
       condition: eq(variables['DoDocker'], 'true')
       displayName: Docker
